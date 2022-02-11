@@ -1,6 +1,7 @@
 import models
 import schemas
 from ip import get_ip
+from hashing import Hasher
 
 
 def get_user(user_id: int):
@@ -11,12 +12,9 @@ def get_user_by_email(email: str):
     return models.User.filter(models.User.email == email).first()
 
 
-def get_users(skip: int = 0, limit: int = 100):
-    return list(models.User.select().offset(skip).limit(limit))
-
-
 def create_user(user: schemas.UserCreate):
-    db_user = models.User(username=user.username, email=user.email, password=user.password)
+    hashed_password = Hasher.get_password_hash(user.password)
+    db_user = models.User(username=user.username, email=user.email, password=hashed_password)
     db_user.save()
     return db_user
 

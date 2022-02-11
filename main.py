@@ -6,12 +6,14 @@ from pydantic import BaseModel
 from fastapi.openapi.utils import get_openapi
 
 
+
 from crud import get_user_by_email, create_user, create_user_task, get_task
 import models
 import schemas
 from database import db_state_default, db
 from schemas import UserBase
 from secrets import compare_digest
+from hashing import Hasher
 
 
 db.connect()
@@ -69,7 +71,7 @@ def login(user: UserBase, Authorize: AuthJWT = Depends()):
     db_user = get_user_by_email(email=user.email)
     if not db_user:
         raise HTTPException(status_code=400, detail="A user with this email was not found")
-    if not compare_digest(user.password, db_user.password):
+    if not Hasher.verify_password(user.password, db_user.password):
         raise HTTPException(status_code=400, detail="Invalid password")
     access_token = Authorize.create_access_token(subject=user.email, fresh=True)
     refresh_token = Authorize.create_refresh_token(subject=user.email)
